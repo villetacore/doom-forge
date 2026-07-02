@@ -1,11 +1,18 @@
-node_modules
-dist
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.iml
+doc/api/
+
+# Rust (flutter_rust_bridge crate)
+rust/target/
+rust_builder/**/build/
+
+# Editor / OS / local tooling
+.idea/
+.vscode/
+.claude/
 .DS_Store
 *.log
-
-# Local editor / preview tooling
-.claude
-
-# Rust / Tauri
-src-tauri/target
-src-tauri/gen/schemas

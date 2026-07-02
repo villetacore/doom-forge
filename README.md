@@ -1,169 +1,81 @@
-<p align="center">
-  <img src="docs/img/banner.svg" alt="DoomForge" width="100%" />
-</p>
+# DoomForge
 
-<p align="center">
-  <a href="https://github.com/villetacore/doom-forge/actions/workflows/ci.yml"><img src="https://github.com/villetacore/doom-forge/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2" />
-  <img src="https://img.shields.io/badge/Rust-stable-CE412B?logo=rust&logoColor=white" alt="Rust" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black" alt="React 18" />
-  <img src="https://img.shields.io/badge/platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444" alt="Platforms" />
-  <img src="https://img.shields.io/badge/license-MIT-success" alt="MIT" />
-</p>
+A modern desktop **launcher and mod manager for GZDoom** — built with
+**Flutter** (UI) and **Rust** (core logic), bridged by
+[flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-<p align="center">
-  <b>DoomForge</b> is a modern launcher and mod manager for <b>GZDoom</b> (and LZDoom / Zandronum / VKDoom).<br/>
-  Build mod loadouts, resolve conflicts, launch, and diagnose crashes — all from one fast desktop app.<br/>
-  <i>Think “Steam + Vortex + Cargo, but for GZDoom”.</i>
-</p>
+- Assemble mod loadouts, order them, and launch GZDoom.
+- Scan a mods folder, detect engines & IWADs, resolve conflicts, diagnose crashes.
+- 3 themes × 10 accent palettes, 11 UI languages, no emoji — original Doom-style art.
 
----
+## Project layout
 
-## Screenshots
-
-|  |  |
-| :--: | :--: |
-| **Build a loadout** | **Diagnostics** |
-| ![Build view](docs/img/build.png) | ![Crash diagnostics](docs/img/crash.png) |
-| **Settings — themes & palettes** | **Light theme** |
-| ![Settings](docs/img/settings.png) | ![Light theme](docs/img/settings-light.png) |
-
-<p align="center"><img src="docs/img/library.png" alt="Library" width="80%" /></p>
-
-## Features
-
-### Build & launch
-- **Mod scanning** of a folder tree (`.pk3 .pk7 .wad .zip .pke .ipk3 .deh .bex`) with automatic
-  grouping into Maps / Gameplay / Audio / Visuals / Patches.
-- **Build profiles** — create / edit / delete, persisted as JSON, plus **export / import** as a
-  single `.dfprofile` file.
-- **Drag-and-drop load order** with per-entry enable/disable and an **auto-sort** heuristic
-  (maps & gameplay first, visual/audio/patch overrides last).
-- **Launch**, **Safe mode** (`-noautoload`) and **Autotest** (dry-run validation).
-
-### Curate & understand
-- **Conflicts DB → compatibility score (%)**, a **dependency graph**, and **build comparison**.
-- **Snapshots / history / rollback**, a **stability rating**, and Markdown **problem reports**.
-- **Duplicate detection** (identical SHA-256 or same filename) and **content search** inside archives.
-- **Crash-log analysis** — local culprit detection plus an optional **Claude AI** deep-dive.
-- **Recommendations** and one-click **“forge a 2026 build”** auto-assembler.
-
-### Get the goods
-- **Engine & IWAD setup** — download the free **Freedoom** IWADs and the latest **GZDoom**, or
-  **detect** engines already on your `PATH`.
-- **Mod downloads** — a curated catalog, **Import by URL**, and a pluggable custom registry.
-
-### Power tools
-- A **`doom` CLI** package manager (`doom add … && doom run`).
-
-## Themes & color schemes
-
-DoomForge ships **3 base modes** — **Dark**, **Light**, and **AMOLED** (true black) — combined with
-**10 accent palettes**:
-
-`Ember` · `Plasma` · `Toxic` · `Abyss` · `Blood` · `Gold` · `Cobalt` · `Viridian` · `Magenta` · `Slate`
-
-Pick any mode + palette combination in **Settings → Appearance**; your choice is saved locally.
-
-## Languages
-
-The UI is fully translated into **11 languages**, switchable in **Settings → Language**:
-
-| | | | |
-|---|---|---|---|
-| English | Русский | Українська | Deutsch |
-| Français | Español | Italiano | Português |
-| Polski | 中文 | 日本語 | |
-
-> Adding a language is one file in [`src/i18n/`](src/i18n/) plus an entry in `LANGUAGES`. A test
-> enforces that every dictionary defines exactly the same keys as English.
-
-## Install & build
-
-**Prerequisites:** [Node.js](https://nodejs.org) 18+, the [Rust](https://rustup.rs) toolchain, and the
-Tauri 2 system dependencies (on Windows the **WebView2** runtime — preinstalled on Win10/11 — and the
-**Visual Studio C++ build tools**).
-
-```bash
-# install frontend dependencies
-npm install
-
-# run in development (Vite + the Rust app)
-npm run app:dev
-
-# build a production installer for your OS
-npm run app:build
+```
+doom-forge/
+├── lib/                 Flutter app (Dart)
+│   ├── main.dart          entry: inits the Rust bridge + app data dir
+│   ├── app.dart           MaterialApp + theme wiring
+│   ├── app_state.dart     state (provider) + settings persistence
+│   ├── shell.dart         sidebar / topbar / status bar
+│   ├── theme/             3 modes × 10 palettes
+│   ├── i18n/              11 language dictionaries
+│   ├── widgets/           Doom art (skull/hero painters) + reusable controls
+│   ├── views/             build · library · browse · compare · crash · status · settings
+│   └── src/rust/          generated FRB bindings (do not edit by hand)
+├── rust/                 Rust core (the launcher's brains)
+│   ├── src/domain/         scan, engine, iwad, load order, profiles, launch, conflicts …
+│   ├── src/services/       downloads (Freedoom/GZDoom/idgames) + Claude AI
+│   └── src/api/            the flutter_rust_bridge API surface
+├── rust_builder/         cargokit glue that builds `rust/` for each platform
+├── windows/ linux/ macos/  Flutter desktop runners
+└── pubspec.yaml
 ```
 
-<details>
-<summary>Windows one-liners</summary>
+Nothing else — no Node, no web/mobile targets, no Tauri.
+
+## Prerequisites
+
+- **[Flutter SDK](https://docs.flutter.dev/get-started/install)** (stable, 3.4+) — includes Dart.
+- **[Rust](https://rustup.rs)** (stable toolchain).
+- **Windows:** Visual Studio 2022+ with the **“Desktop development with C++”** workload,
+  and **Developer Mode enabled** (Settings → *For developers*, or run `start ms-settings:developers`).
+  Developer Mode is required so Flutter can create the plugin symlinks.
+- **Linux:** `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev` (+ `unzip`).
+
+## Run it
 
 ```powershell
-# one-time: install Rust if missing
-winget install --id Rustlang.Rustup -e
+# 1. (Windows, one time) enable Developer Mode
+start ms-settings:developers      # toggle "Developer Mode" ON
 
-powershell -ExecutionPolicy Bypass -File scripts\win-build.ps1   # build
-powershell -ExecutionPolicy Bypass -File scripts\win-run.ps1     # run dev
-```
-</details>
+# 2. fetch Dart packages
+flutter pub get
 
-<details>
-<summary>Build / run via WSL</summary>
-
-See `scripts/wsl-*.sh` — they mirror the project into the Linux filesystem and build there
-(building on `/mnt/c` is slow and corrupts native npm packages).
-</details>
-
-## Development
-
-```bash
-npm run build        # type-check (tsc) + production frontend build
-npm test             # frontend unit tests (Vitest)
-
-cd src-tauri
-cargo test           # Rust domain tests
-cargo clippy         # lints
+# 3. run the desktop app (debug)
+flutter run -d windows            # or: -d linux / -d macos
 ```
 
-Frontend tests cover i18n key parity across all 11 languages and the theme engine; Rust tests cover
-the load-order heuristic, launch-argument builder, conflict scoring, mod classification, and the
-profile export/import roundtrip.
+That’s it — `flutter run` compiles the Rust crate automatically (via cargokit) and
+launches the app.
 
-## CI/CD
+### Build a release
 
-- **[CI](.github/workflows/ci.yml)** runs on every push and PR: frontend build + Vitest, and
-  `cargo clippy` + `cargo test` on Linux and Windows.
-- **[Release](.github/workflows/release.yml)** runs on a version tag (`v*`) and builds signed-ready
-  installers for **Windows, macOS (Intel + Apple Silicon) and Linux** via
-  [`tauri-action`](https://github.com/tauri-apps/tauri-action), publishing a draft GitHub Release.
-
-```bash
-git tag v0.1.0 && git push origin v0.1.0   # triggers the release build
+```powershell
+flutter build windows             # or: linux / macos
+# output: build/windows/x64/runner/Release/
 ```
 
-## Architecture
+### Regenerating the Rust↔Dart bridge
 
-```
-src/                     React + TypeScript frontend
-  components/            Icon set, Doom-inspired SVG art, EmptyHero
-  features/<area>/       shell · build · library · browse · compare · crash · status · settings
-  i18n/                  11 language dictionaries + useT() hook
-  theme/                 modes + accent palettes (CSS variables)
-  store/                 zustand state (+ localStorage settings)
-  lib/                   typed Tauri command wrappers + shared types
-src-tauri/src/           Rust backend
-  domain/                pure logic: scan, engine, iwad, load_order, profile, launch,
-                         conflicts, snapshots, stability, logs, recommend, report
-  services/              outside world: net (downloads/registry/idgames), ai (Claude)
-  commands/              Tauri command handlers
-  bin/doom.rs            the `doom` CLI
-```
+Only needed if you change the Rust API in `rust/src/api/`:
 
-See [ROADMAP.md](ROADMAP.md) for cloud sync, the public build catalog, and what’s next.
+```powershell
+cargo install flutter_rust_bridge_codegen   # once
+flutter_rust_bridge_codegen generate
+```
 
 ## License
 
 [MIT](LICENSE) © DoomForge contributors.
 
-<sub>DoomForge is an unofficial, fan-made tool and is not affiliated with id Software or ZeniMax. All
-artwork in this repository is original. “Doom” and “GZDoom” belong to their respective owners.</sub>
+<sub>Unofficial fan-made tool, not affiliated with id Software or ZeniMax. All artwork is original.</sub>
